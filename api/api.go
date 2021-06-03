@@ -11,6 +11,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type SettingsType struct {
+	LOKI_BASE_URL string
+}
+
 func test(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "test")
 }

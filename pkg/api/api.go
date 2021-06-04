@@ -54,13 +54,6 @@ func index(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, s)
 }
 
-func enableCorsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		(w).Header().Set("Access-Control-Allow-Origin", "*")
-		next.ServeHTTP(w, r)
-	})
-}
-
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method, r.RequestURI)
@@ -68,19 +61,18 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func RunServer() {
+func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 
-	router.Use(enableCorsMiddleware)
+	router.Use(mux.CORSMethodMiddleware(router))
 	router.Use(loggingMiddleware)
 
-	router.HandleFunc("/", index).Methods("GET")
-	router.HandleFunc("/api/status", status).Methods("GET")
-	router.HandleFunc("/api/test", test).Methods("GET")
+	router.HandleFunc("/", index).Methods(http.MethodGet)
+	router.HandleFunc("/api/status", status).Methods(http.MethodGet)
+	router.HandleFunc("/api/test", test).Methods(http.MethodGet)
 
-	router.HandleFunc("/api/query", query).Methods("GET")
-	router.HandleFunc("/api/query", query).Methods("GET").Queries("query", "{query}")
+	router.HandleFunc("/api/query", query).Methods(http.MethodGet)
+	router.HandleFunc("/api/query", query).Methods(http.MethodGet).Queries("query", "{query}")
 
-	fmt.Println("Listening on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	return router
 }

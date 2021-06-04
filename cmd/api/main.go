@@ -1,7 +1,13 @@
 package main
 
-import "github.com/flared/lokify/api"
+import (
+	"log"
+	"net/http"
+
+	"github.com/flared/lokify/pkg/api"
+)
 
 func main() {
-	api.RunServer()
+	router := api.NewRouter()
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

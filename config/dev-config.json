@@ -1,0 +1,5 @@
+{
+    "loki_base_url": "http://localhost:3100",
+    "lokify_base_url": "http://localhost:8080",
+    "build_dir": "/ui/build/index.html"
+}

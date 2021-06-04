@@ -1,14 +1,57 @@
-package main
+package api
 
 import (
+	"encoding/json"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 
+	"github.com/flared/lokify/pkg/loki"
 	"github.com/gorilla/mux"
 )
 
 func test(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "test")
+}
+
+func status(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "ok")
+}
+
+func query(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	query, ok := vars["query"]
+	if !ok {
+		query = "{container_name=\"firework-api\"} | json"
+	}
+
+	client := loki.NewClient("http://localhost:3100")
+	resp, errQuery := client.Query(query)
+	if errQuery != nil {
+		log.Printf("Loky client error, %v", errQuery)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func index(w http.ResponseWriter, r *http.Request) {
+	s := make(map[string]string)
+	s["base_url"] = "http://localhost:8080"
+
+	distDir := "../ui/build/index.html"
+	t, err := template.ParseFiles(distDir)
+	if err != nil {
+		log.Printf("Template parse files error, %v", err)
+		w.WriteHeader(500)
+		return
+	}
+
+	t.Execute(w, s)
 }
 
 func enableCorsMiddleware(next http.Handler) http.Handler {
@@ -18,17 +61,26 @@ func enableCorsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func status(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "ok")
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
 }
 
-func main() {
+func RunServer() {
 	router := mux.NewRouter()
 
 	router.Use(enableCorsMiddleware)
+	router.Use(loggingMiddleware)
 
-	router.HandleFunc("/api/status", status)
+	router.HandleFunc("/", index).Methods("GET")
+	router.HandleFunc("/api/status", status).Methods("GET")
 	router.HandleFunc("/api/test", test).Methods("GET")
 
-	http.ListenAndServe(":8080", router)
+	router.HandleFunc("/api/query", query).Methods("GET")
+	router.HandleFunc("/api/query", query).Methods("GET").Queries("query", "{query}")
+
+	fmt.Println("Listening on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", router))
 }

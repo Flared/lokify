@@ -15,6 +15,6 @@ ui/node_modules: ui/package.json \
 clean:
 	rm -rf ui/node_modules
 
-.PHONY: npm-run-watch
-npm-run-watch: ui/node_modules
-	npm --prefix ui run dev
+.PHONY: npm-start
+npm-start: ui/node_modules
+	npm --prefix ui start

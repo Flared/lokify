@@ -54,6 +54,13 @@ func index(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, s)
 }
 
+func enableCorsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		(w).Header().Set("Access-Control-Allow-Origin", "*")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.Method, r.RequestURI)
@@ -65,6 +72,7 @@ func NewRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	router.Use(mux.CORSMethodMiddleware(router))
+	router.Use(enableCorsMiddleware)
 	router.Use(loggingMiddleware)
 
 	router.HandleFunc("/", index).Methods(http.MethodGet)

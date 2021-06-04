@@ -6,6 +6,10 @@ go-build:
 go-run:
 	go run cmd/api/main.go
 
+.PHONY: go-tests
+go-tests:
+	go test ./pkg/...
+
 ui/node_modules: ui/package.json \
                  ui/package-lock.json
 	rm -rf ui/node_modules

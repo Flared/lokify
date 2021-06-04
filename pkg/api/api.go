@@ -27,16 +27,14 @@ func query(w http.ResponseWriter, r *http.Request) {
 		query = "{container_name=\"firework-api\"} | json"
 	}
 
-	client := loki.NewClient("http://localhost:3100")
-	resp, errQuery := client.Query(query)
-	if errQuery != nil {
-		log.Printf("Loky client error, %v", errQuery)
+	client := loki.NewClient(&http.Client{}, "http://localhost:3100")
+	if resp, err := client.Query(query); err != nil {
+		log.Printf("Loky client error, %v", err)
 		w.WriteHeader(500)
-		return
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -44,14 +42,13 @@ func index(w http.ResponseWriter, r *http.Request) {
 	s["base_url"] = "http://localhost:8080"
 
 	distDir := "../ui/build/index.html"
-	t, err := template.ParseFiles(distDir)
-	if err != nil {
+	if t, err := template.ParseFiles(distDir); err != nil {
 		log.Printf("Template parse files error, %v", err)
 		w.WriteHeader(500)
 		return
+	} else {
+		t.Execute(w, s)
 	}
-
-	t.Execute(w, s)
 }
 
 func enableCorsMiddleware(next http.Handler) http.Handler {

@@ -7,12 +7,14 @@ import (
 	"net/url"
 )
 
-type LokiClient struct {
+type lokiClient struct {
+	client  *http.Client
 	baseUrl string
 }
 
-func NewClient(baseUrl string) *LokiClient {
-	return &LokiClient{
+func NewClient(client *http.Client, baseUrl string) *lokiClient {
+	return &lokiClient{
+		client:  client,
 		baseUrl: baseUrl,
 	}
 }
@@ -37,19 +39,23 @@ func buildUrl(baseUrl string, path string, values map[string]string) (*url.URL, 
 }
 
 type QueryResponse struct {
-	Status string `json:"status"`
-	Data   struct {
-		ResultType string `json:"resultType"`
-		Result     []struct {
-			Stream map[string]string `json:"stream"`
-			Values [][]string        `json:"values"`
-		} `json:"result"`
-	} `json:"data"`
+	Status string    `json:"status"`
+	Data   QueryData `json:"data"`
 }
 
-func (c LokiClient) Query(query string) (*QueryResponse, error) {
+type QueryData struct {
+	ResultType string            `json:"resultType"`
+	Result     []QueryDataResult `json:"result"`
+}
+
+type QueryDataResult struct {
+	Stream map[string]string `json:"stream"`
+	Values [][2]string       `json:"values"`
+}
+
+func (client lokiClient) Query(query string) (*QueryResponse, error) {
 	u, errBuildUrl := buildUrl(
-		c.baseUrl,
+		client.baseUrl,
 		"loki/api/v1/query",
 		map[string]string{
 			"query": query,
@@ -60,7 +66,7 @@ func (c LokiClient) Query(query string) (*QueryResponse, error) {
 		return nil, errBuildUrl
 	}
 
-	resp, errGet := http.Get(u.String())
+	resp, errGet := client.client.Get(u.String())
 	if errGet != nil {
 		return nil, errGet
 	}

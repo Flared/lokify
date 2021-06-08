@@ -4,9 +4,9 @@ import View from 'components/View'
 import 'styles/index.css'
 
 ReactDOM.render(
-    <React.StrictMode>
+  <React.StrictMode>
         Lokify
-        <View query="status" />
-    </React.StrictMode>,
-    document.getElementById('root'),
+    <View query="status" />
+  </React.StrictMode>,
+  document.getElementById('root'),
 )

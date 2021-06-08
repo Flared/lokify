@@ -1,0 +1,10 @@
+.QueryBar {
+    width: 50%;
+    display: flex;
+    align-items: center;
+    
+
+    .logql-input {
+        flex-grow: 1;
+    }
+}

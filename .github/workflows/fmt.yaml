@@ -27,4 +27,6 @@ jobs:
           ln -s $(pwd) $(go env GOPATH)/src/github/flared/lokify
       
       - name: Run fmt
-        run:  go fmt ./...
+        run: |
+          go fmt ./...
+          test -z "$(git status --porcelain)"

@@ -2,7 +2,6 @@ package loki
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 )
@@ -54,7 +53,7 @@ type QueryDataResult struct {
 }
 
 func (client lokiClient) Query(query string) (*QueryResponse, error) {
-	u, errBuildUrl := buildUrl(
+	queryUrl, errBuildUrl := buildUrl(
 		client.baseUrl,
 		"loki/api/v1/query",
 		map[string]string{
@@ -66,20 +65,15 @@ func (client lokiClient) Query(query string) (*QueryResponse, error) {
 		return nil, errBuildUrl
 	}
 
-	resp, errGet := client.client.Get(u.String())
+	resp, errGet := client.client.Get(queryUrl.String())
 	if errGet != nil {
 		return nil, errGet
 	}
 
 	defer resp.Body.Close()
 
-	b, errReadAll := ioutil.ReadAll(resp.Body)
-	if errReadAll != nil {
-		return nil, errReadAll
-	}
-
 	var q QueryResponse
-	if err := json.Unmarshal(b, &q); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&q); err != nil {
 		return nil, err
 	}
 

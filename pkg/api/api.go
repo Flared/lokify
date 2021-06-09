@@ -11,6 +11,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type AppContext struct {
+	loki lokiClient
+}
+
+func NewAppContext(loki lokiClient) *AppContext {
+	return &AppContext{
+		loki: loki,
+	}
+}
+
+type lokiClient interface {
+	Query(string) (*loki.QueryResponse, error)
+}
+
 func test(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "test")
 }
@@ -19,22 +33,32 @@ func status(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "ok")
 }
 
-func query(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func queryHandler(appCtx *AppContext) http.Handler {
+	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 
-	query, ok := vars["query"]
-	if !ok {
-		query = "{container_name=\"firework-api\"} | json"
-	}
+		query, ok := vars["query"]
+		if !ok {
+			query = "{container_name=\"firework-api\"} | json"
+		}
 
-	client := loki.NewClient(&http.Client{}, "http://localhost:3100")
-	if resp, err := client.Query(query); err != nil {
-		log.Printf("Loky client error, %v", err)
-		w.WriteHeader(500)
-	} else {
+		resp, err := appCtx.loki.Query(query)
+		if err != nil {
+			log.Printf("Loki Query error, %v", err)
+			w.WriteHeader(500)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("json Encode error, %v", err)
+			w.WriteHeader(500)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
 	}
+
+	return http.HandlerFunc(handlerFunc)
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +89,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func NewRouter() *mux.Router {
+func NewRouter(ctx *AppContext) *mux.Router {
 	router := mux.NewRouter()
 
 	router.Use(mux.CORSMethodMiddleware(router))
@@ -76,8 +100,8 @@ func NewRouter() *mux.Router {
 	router.HandleFunc("/api/status", status).Methods(http.MethodGet)
 	router.HandleFunc("/api/test", test).Methods(http.MethodGet)
 
-	router.HandleFunc("/api/query", query).Methods(http.MethodGet)
-	router.HandleFunc("/api/query", query).Methods(http.MethodGet).Queries("query", "{query}")
+	router.Path("/api/query").Handler(queryHandler(ctx)).Methods(http.MethodGet)
+	router.Path("/api/query").Handler(queryHandler(ctx)).Methods(http.MethodGet).Queries("query", "{query}")
 
 	return router
 }

@@ -53,7 +53,7 @@ type QueryDataResult struct {
 }
 
 func (client lokiClient) Query(query string) (*QueryResponse, error) {
-	queryUrl, errBuildUrl := buildUrl(
+	queryUrl, err := buildUrl(
 		client.baseUrl,
 		"loki/api/v1/query",
 		map[string]string{
@@ -61,21 +61,50 @@ func (client lokiClient) Query(query string) (*QueryResponse, error) {
 			"limit": "100",
 		},
 	)
-	if errBuildUrl != nil {
-		return nil, errBuildUrl
+	if err != nil {
+		return nil, err
 	}
 
-	resp, errGet := client.client.Get(queryUrl.String())
-	if errGet != nil {
-		return nil, errGet
+	resp, err := client.client.Get(queryUrl.String())
+	if err != nil {
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 
-	var q QueryResponse
-	if err := json.NewDecoder(resp.Body).Decode(&q); err != nil {
+	var payload QueryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
 		return nil, err
 	}
 
-	return &q, nil
+	return &payload, nil
+}
+
+func (client lokiClient) QueryRange(query string, start string, end string) (*QueryResponse, error) {
+	queryRangeUrl, err := buildUrl(
+		client.baseUrl,
+		"loki/api/v1/query_range",
+		map[string]string{
+			"query": query,
+			"limit": "100",
+			"start": end,
+			"end":   start,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Get(queryRangeUrl.String())
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var payload QueryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return nil, err
+	}
+
+	return &payload, nil
 }

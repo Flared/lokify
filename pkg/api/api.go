@@ -23,6 +23,7 @@ func NewAppContext(loki lokiClient) *AppContext {
 
 type lokiClient interface {
 	Query(string) (*loki.QueryResponse, error)
+	QueryRange(string, string, string) (*loki.QueryResponse, error)
 }
 
 func test(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +57,44 @@ func queryHandler(appCtx *AppContext) http.Handler {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+	}
+
+	return http.HandlerFunc(handlerFunc)
+}
+
+func queryRangeHandler(ctx *AppContext) http.Handler {
+	handlerFunc := func(rw http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		query, ok := vars["query"]
+		if !ok {
+			log.Print("query is missing")
+			rw.WriteHeader(400)
+			return
+		}
+		start, ok := vars["start"]
+		if !ok {
+			log.Print("start is missing")
+			rw.WriteHeader(400)
+			return
+		}
+		end, ok := vars["end"]
+		if !ok {
+			log.Print("end is missing")
+			rw.WriteHeader(400)
+			return
+		}
+
+		resp, err := ctx.loki.QueryRange(query, start, end)
+		if err != nil {
+			log.Printf("Loky client error, %v", err)
+			rw.WriteHeader(500)
+			return
+		}
+
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(200)
+		json.NewEncoder(rw).Encode(resp)
 	}
 
 	return http.HandlerFunc(handlerFunc)
@@ -100,8 +139,9 @@ func NewRouter(ctx *AppContext) *mux.Router {
 	router.HandleFunc("/api/status", status).Methods(http.MethodGet)
 	router.HandleFunc("/api/test", test).Methods(http.MethodGet)
 
-	router.Path("/api/query").Handler(queryHandler(ctx)).Methods(http.MethodGet)
 	router.Path("/api/query").Handler(queryHandler(ctx)).Methods(http.MethodGet).Queries("query", "{query}")
+	router.Path("/api/query_range").Handler(queryRangeHandler(ctx)).Methods("GET").
+		Queries("query", "{query}", "start", "{start:[0-9]+}", "end", "{end:[0-9]+}")
 
 	return router
 }

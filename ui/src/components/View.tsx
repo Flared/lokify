@@ -1,42 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { getQuery, getStatus, QueryStreamValue } from 'services/Client'
+import React, { useState } from 'react'
+import { Header } from 'components/Header'
+import { Query } from 'components/Query'
+import { Logs } from 'components/Logs'
+import 'styles/components/View.css'
 
-interface ViewProps {
-    query: string
-}
+export const View = (): JSX.Element => {
 
-export default function View(props: ViewProps): JSX.Element {
-    const [status, setStatus] = useState<string | null>(null)
-    useEffect(() => {
-        if (!status) {
-            getStatus().then((value) => {
-                setStatus(value)
-            })
-        }
-    }, [status])
+  const [containerId,] = useState<string | null>('fkff40')
 
-    const [logs, setLogs] = useState<QueryStreamValue[]>([])
-    useEffect(() => {
-        if (logs.length === 0) {
-            getQuery().then((value) => {
-                setLogs(value)
-            })
-        }
-    }, [logs.length])
-
-    return (
-        <div className="View">
-            <div>
-                {props.query}: {status}
-            </div>
-            {logs.map((value: QueryStreamValue, key: number) => {
-                return (
-                    <div key={key}>
-                        {value.stream.data_timestamp_iso} -{' '}
-                        {value.stream.message}
-                    </div>
-                )
-            })}
-        </div>
-    )
+  return (
+    <div className="view">
+      <Header containerId={containerId}/>
+      <Query/>
+      <Logs/>
+    </div>
+  )
 }

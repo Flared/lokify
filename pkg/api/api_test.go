@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/flared/lokify/pkg/api"
+	"github.com/flared/lokify/pkg/api/appctx"
 	"github.com/flared/lokify/pkg/loki"
 )
 
@@ -36,7 +37,7 @@ func (apiTest *apiTest) Close() {
 }
 
 func newApiTest(t *testing.T, lokiClient *lokiClientTest) *apiTest {
-	ctx := api.NewAppContext(lokiClient)
+	ctx := appctx.New(lokiClient)
 	return &apiTest{
 		server: httptest.NewServer(api.NewRouter(ctx)),
 		t:      t,
@@ -72,7 +73,9 @@ func TestQuery(t *testing.T) {
 	apiTest := newApiTest(t, lokiClient)
 	defer apiTest.Close()
 
-	if resp, err := http.Get(strings.Join([]string{apiTest.server.URL, "api/query"}, "/")); err != nil {
+	queryUrl := strings.Join([]string{apiTest.server.URL, "api/query?query=%7Blabel%3D%22value%22%7D"}, "/")
+
+	if resp, err := http.Get(queryUrl); err != nil {
 		t.Fatal(err)
 	} else {
 		defer resp.Body.Close()

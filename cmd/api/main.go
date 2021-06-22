@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/flared/lokify/pkg/api"
+	"github.com/flared/lokify/pkg/api/appctx"
 	"github.com/flared/lokify/pkg/loki"
 )
 
@@ -19,7 +20,7 @@ func main() {
 	flag.Parse()
 
 	loki := loki.NewClient(&http.Client{}, *lokiBaseUrl)
-	ctx := api.NewAppContext(loki)
+	ctx := appctx.New(loki)
 	router := api.NewRouter(ctx)
 	addr := fmt.Sprintf(":%v", *port)
 

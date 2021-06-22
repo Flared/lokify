@@ -6,6 +6,10 @@ import (
 	"net/url"
 )
 
+type Client interface {
+	Query(string) (*QueryResponse, error)
+}
+
 type lokiClient struct {
 	client  *http.Client
 	baseUrl string

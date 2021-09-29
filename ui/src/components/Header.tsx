@@ -1,8 +1,9 @@
-import React from 'react'
 import 'styles/components/Header.css'
 
+import React from 'react'
+
 interface Props {
-  containerId: string | null,
+  containerId: string | null
 }
 
 export const Header = (props: Props): JSX.Element => {

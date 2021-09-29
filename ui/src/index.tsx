@@ -1,11 +1,12 @@
+import 'styles/index.css'
+
+import { View } from 'components/View'
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { View } from 'components/View'
-import 'styles/index.css'
 
 ReactDOM.render(
   <React.StrictMode>
-    <View/>
+    <View />
   </React.StrictMode>,
   document.getElementById('root'),
 )

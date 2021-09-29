@@ -23,5 +23,5 @@ jobs:
         with:
           eslint: true
           eslint_dir: ui/
-          eslint_args: '*/**/*.{ts,tsx}'
+          eslint_args: 'src/**/*.{ts,tsx}'
           eslint_extensions: ts,tsx

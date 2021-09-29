@@ -1,34 +1,62 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 
-	"github.com/flared/lokify/pkg/api/appctx"
-	"github.com/flared/lokify/pkg/api/middleware"
+	"github.com/flared/lokify/pkg/middleware"
 	"github.com/gorilla/mux"
 )
+
+type context struct {
+	client  *http.Client
+	baseUrl string
+}
+
+func NewContext(client *http.Client, baseUrl string) *context {
+	return &context{
+		client:  client,
+		baseUrl: baseUrl,
+	}
+}
 
 func status(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "ok")
 }
 
-func queryHandler(ctx *appctx.Context) http.Handler {
+func queryHandler(ctx *context) http.Handler {
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		resp, err := ctx.Loki.Query(vars["query"])
+		query := vars["query"]
+		limit := "100"
+
+		params := strings.Join(
+			[]string{
+				"query=" + url.QueryEscape(query),
+				"limit=" + url.QueryEscape(limit),
+			},
+			"&",
+		)
+
+		resp, err := ctx.client.Get(ctx.baseUrl + "/loki/api/v1/query?" + params)
 		if err != nil {
 			log.Printf("Loki Query error, %v", err)
 			w.WriteHeader(500)
 			return
 		}
 
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			log.Printf("json Encode error, %v", err)
+		defer resp.Body.Close()
+
+		w.WriteHeader(resp.StatusCode)
+		if _, err := ioutil.ReadAll(io.TeeReader(resp.Body, w)); err != nil {
+			log.Printf("Loki Query error, %v", err)
 			w.WriteHeader(500)
 			return
 		}
@@ -52,7 +80,7 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewRouter(ctx *appctx.Context) *mux.Router {
+func NewRouter(ctx *context) *mux.Router {
 	router := mux.NewRouter()
 
 	// middlewares

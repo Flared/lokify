@@ -1,7 +1,7 @@
-import 'styles/components/Logs.css'
+import 'styles/components/Logs.css';
 
-import { LogTable } from 'components/library/LogTable'
-import React from 'react'
+import { LogTable } from 'components/library/LogTable';
+import React from 'react';
 
 export const Logs = (): JSX.Element => {
   return (
@@ -20,5 +20,5 @@ export const Logs = (): JSX.Element => {
         ]}
       />
     </div>
-  )
-}
+  );
+};

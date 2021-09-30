@@ -1,20 +1,17 @@
-import 'styles/components/Query.css'
+import 'styles/components/Query.css';
 
-import { Button } from 'components/library/Button'
-import { ButtonColors, ButtonSizes, InputTypes } from 'components/library/Enums'
-import { InputBar } from 'components/library/InputBar'
-import React from 'react'
+import Button from '@mui/material/Button';
+import { InputTypes } from 'components/library/Enums';
+import { InputBar } from 'components/library/InputBar';
+import React from 'react';
 
 export const Query = (): JSX.Element => {
   return (
     <div className="query">
       <div className="query-section">
-        <InputBar data={''} type={InputTypes.text} />
-        <Button
-          size={ButtonSizes.medium}
-          text={'Run Query'}
-          color={ButtonColors.green}
-        />
+        {' '}
+        <InputBar data={''} type={InputTypes.text} />{' '}
+        <Button variant="contained">Run Query</Button>{' '}
       </div>
       <div className="query-section">
         <div className="query-details">
@@ -24,13 +21,9 @@ export const Query = (): JSX.Element => {
           <InputBar data={''} type={InputTypes.dateTime} />
         </div>
         <div className="query-details">
-          <Button
-            size={ButtonSizes.medium}
-            text={'Save Query'}
-            color={ButtonColors.blue}
-          />
+          <Button>Save query</Button>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -1,9 +1,9 @@
-import { LogItem } from 'components/library/LogItem'
-import React from 'react'
-import { QueryStreamValue } from 'services/Client'
+import { LogItem } from 'components/library/LogItem';
+import React from 'react';
+import { QueryStreamValue } from 'services/Client';
 
 interface Props {
-  logs: QueryStreamValue[]
+  logs: QueryStreamValue[];
 }
 
 export const LogTable = (props: Props): JSX.Element => {
@@ -15,11 +15,11 @@ export const LogTable = (props: Props): JSX.Element => {
             <div key={index}>
               <LogItem logData={value} />
             </div>
-          )
+          );
         })
       ) : (
         <p>No results.</p>
       )}
     </div>
-  )
-}
+  );
+};

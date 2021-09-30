@@ -1,16 +1,16 @@
-import React, { useState } from 'react'
-import { QueryStreamValue } from 'services/Client'
+import React, { useState } from 'react';
+import { QueryStreamValue } from 'services/Client';
 
 interface Props {
-  logData: QueryStreamValue
+  logData: QueryStreamValue;
 }
 
 export const LogItem = (props: Props): JSX.Element => {
-  const [isExpanded, setExpanded] = useState<boolean>(false)
+  const [isExpanded, setExpanded] = useState<boolean>(false);
 
   const toggleLogLabelsExpand = (): void => {
-    setExpanded(!isExpanded)
-  }
+    setExpanded(!isExpanded);
+  };
 
   return (
     <div>
@@ -27,5 +27,5 @@ export const LogItem = (props: Props): JSX.Element => {
         <></>
       )}
     </div>
-  )
-}
+  );
+};
